@@ -6,14 +6,25 @@
 #include <string.h>
 #include "sort.h"
 
-void usage(char *prog) 
+void usage() 
 {
-    fprintf(stderr, "usage: %s <-s random seed> <-n number of records> <-o output file>\n", prog);
+    fprintf(stderr, "Usage: fastsort -i inputfile -o outputfile\n");
     exit(1);
+}
+
+int cmpfunc (const void * a, const void * b)
+{
+   const rec_t *_a = a;
+   const rec_t *_b = b;
+   
+   if(_a->key > _b->key) return   1;
+   if(_a->key < _b->key) return  -1;
+   return 0;
 }
 
 int main(int argc, char *argv[])
 {
+  char *defFile   = "/no/such/file";
   char *inFile    = "/no/such/file";
   char *outFile   = "/no/such/file";
  
@@ -28,20 +39,25 @@ int main(int argc, char *argv[])
 	  outFile     = strdup(optarg);
 	  break;
       default:
-	  usage(argv[0]);
+	  usage();
       }
   }
   
+  if (inFile == defFile || outFile == defFile) {
+    usage();
+  }
   // open and create output file
   int fd = open(inFile, O_RDONLY);
   if (fd < 0) {
-      perror("open");
+      fprintf(stderr, "Error: Cannot open file %s\n", inFile);
+      //usage();
       exit(1);
   }
   
   int out = open(outFile, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU);
   if (out < 0) {
-    perror("open");
+    fprintf(stderr, "Error: Cannot open file %s\n", outFile);
+    //usage();
     exit(1);
   }
 
@@ -60,39 +76,52 @@ int main(int argc, char *argv[])
     if (rc == 0) // 0 indicates EOF
 	break;
     if (rc < 0) {
-	perror("read");
+	fprintf(stderr, "Error: Cannot open file %s", inFile);
 	exit(1);
     }
     
     //printf("Resize: %u --", (int)(rec_counter * sizeof(rec_t)));
     tmp = realloc(array, rec_counter * sizeof(rec_t));
     if(tmp == NULL) {
-      printf("FAILED REALLOC");
+      fprintf(stderr, "Error: failed realloc.");
+      exit(1);
     } else {
       array = tmp;
     }
     array[rec_counter - 1] = r;
     
     
-    printf("key: %u    | rec: ", array[(rec_counter - 1)].key);
+    /*printf("key: %u    | rec: ", array[(rec_counter - 1)].key);
     int k;
 	for (k = 0; k < NUMRECS; k++) 
 	    printf("%u ", array[(rec_counter - 1)].record[k]);
-	printf("\n");
+	printf("\n");*/
     rec_counter += 1;
-    
-    int j;
-    for (j = 0; j < NUMRECS; j++) {
-      
-      rc = write(out, &r, sizeof(rec_t));
-      if (rc != sizeof(rec_t)) {
-	  perror("write");
-	  exit(1);
-	  // should probably remove file here but ...
-      }
-    }
   }
 
+  qsort(array, rec_counter - 1, sizeof(rec_t), cmpfunc);
+  
+  int i;
+  rec_t _wr;
+  for (i = 0; i < rec_counter - 1; i++) {
+	_wr.key = array[i].key;
+	int j;
+	for (j = 0; j < NUMRECS; j++) {
+	    _wr.record[j] = array[i].record[j] ;
+	}
+
+	int rc = write(out, &_wr, sizeof(rec_t));
+	if (rc != sizeof(rec_t)) {
+	    fprintf(stderr, "Error: Cannot open file %s", outFile);
+	    exit(1);
+	    // should probably remove file here but ...
+	}
+    }
+
+  /*for (i = 0; i < rec_counter - 1; ++i) {
+    printf("KEY: %u \n", array[i].key);
+  }*/
+  
   (void) close(fd);
   (void) close(out);
   return 0;
