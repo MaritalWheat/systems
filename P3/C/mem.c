@@ -104,6 +104,7 @@ node* Search_For_Previous_Node(void *address, node **n, int size) {
     }
     
     void *nextAddress = curr;
+    size = curr->data;
     nextAddress += size;
     
     while (curr->next != NULL) {
@@ -112,6 +113,7 @@ node* Search_For_Previous_Node(void *address, node **n, int size) {
             return curr;        }
         curr = curr->next;
         nextAddress = curr;
+        size = curr->data;
         nextAddress += size;
     }
     printf("     Node not found.\n");
@@ -471,11 +473,11 @@ int main(){
     assert(m_error == E_NO_SPACE);
     
     assert(Mem_Free(ptr[1]) == 0);
+    assert(Mem_Free(ptr[3]) == 0);
     assert(Mem_Free(ptr[2]) == 0);
     
-    ptr[2] = Mem_Alloc(1600, FIRSTFIT);
+    ptr[2] = Mem_Alloc(2400, FIRSTFIT);
     assert(ptr[2] != NULL);
     
-    exit(0);
-}
+    exit(0);}
 #endif
