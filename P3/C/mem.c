@@ -29,7 +29,7 @@ node                *header;
 
 
 void Insert_Node(node **toInsert, node **n) {
-    printf("insert node called\n");
+    printf("Insert node called.\n");
     if(*n == NULL) {
         *n = *toInsert;
     } else {
@@ -59,9 +59,9 @@ void Insert_Node(node **toInsert, node **n) {
 }
 
 node* Search_For_Node(void *address, node **n) {
-    printf("delete node called\n");
+    printf("Search for node called.\n");
     if (*n == NULL) {
-        printf("Error: null header.");
+        printf("     Error: null header.\n");
         return NULL;
     }
     node *curr = *n;
@@ -73,14 +73,14 @@ node* Search_For_Node(void *address, node **n) {
             return curr->next;        }
         curr = curr->next;
     }
-    printf("Node not found\n");
+    printf("     Node not found.\n");
     return NULL;
 }
 
 node* Search_For_Previous_Node(void *address, node **n) {
-    printf("delete node called\n");
+    printf("Search for previous node called.\n");
     if (*n == NULL) {
-        printf("Error: null header.");
+        printf("     Error: null header.");
         return NULL;
     }
     node *curr = *n;
@@ -92,21 +92,21 @@ node* Search_For_Previous_Node(void *address, node **n) {
             return curr;        }
         curr = curr->next;
     }
-    printf("Node not found\n");
+    printf("     Node not found.\n");
     return NULL;
 }
 
 node* Get_Best_Fit(int sizeToFit, node **n) {
-    printf("get best fit called with size: %i.\n", sizeToFit);
+    printf("Get BESTFIT called with size: %i.\n", sizeToFit);
     if ((*n) == NULL) {
-        printf("Null header");
+        printf("    Null header.\n");
         //handle error
         return NULL;
     }
     node *curr = *n;
     node *curr_best = NULL;
     int curr_best_difference = sizeToFit;
-    printf("curr size: %i", curr->data);
+    //printf("curr size: %i", curr->data);
     if (curr->data >= sizeToFit) {
         curr_best = curr;
         curr_best_difference = curr->data - sizeToFit;
@@ -114,18 +114,18 @@ node* Get_Best_Fit(int sizeToFit, node **n) {
     
     while (curr->next != NULL) {
         curr = curr->next;
-        printf("curr size: %i", curr->data);
+        //printf("curr size: %i", curr->data);
         if (curr->data >= sizeToFit && ((curr->data - sizeToFit) < curr_best_difference)) {
             curr_best = curr;
             curr_best_difference = curr->data - sizeToFit;
         }
     }
-    printf("returning %p: ", curr_best);
+    //printf("returning %p: ", curr_best);
     return curr_best;
 }
 
 node* Get_Worst_Fit(int sizeToFit, node **n) {
-    printf("get worst fit called.\n");
+    printf("Get WORSTFIT called.\n");
     if ((*n) == NULL) {
         //handle error
         return NULL;
@@ -151,7 +151,7 @@ node* Get_Worst_Fit(int sizeToFit, node **n) {
 }
 
 node* Get_First_Fit(int sizeToFit, node **n) {
-    printf("get first fit called.\n");
+    printf("Get FIRSTFIT called.\n");
     if ((*n) == NULL) {
         //handle error
         return NULL;
@@ -174,8 +174,8 @@ node* Get_First_Fit(int sizeToFit, node **n) {
 
 
 void Delete_Node(void * address, node **n) {
-    printf("delete node called\n");
-    if (*n == NULL) printf("Error: null header.");
+    printf("Delete node called.\n");
+    if (*n == NULL) printf("     Error: null header.\n");
     node *curr = *n;
     node *tmp;
     if (curr == address) {
@@ -197,15 +197,22 @@ void Delete_Node(void * address, node **n) {
 
 void Display(node **n) {
     if (*n == NULL) {
-        printf("Null header - print call\n");
+        printf("Null header - print call.\n");
         return;
     }
     node *curr = *n;
-    printf("%p | size: %d\n", curr, curr->data);
+    printf("     %p | size: %d\n", curr, curr->data);
     while(curr->next != NULL) {
         curr = curr->next;
-        printf("%p | size: %d\n", curr, curr->data);
+        printf("      %p | size: %d\n", curr, curr->data);
     }
+}
+
+
+void Tree_Dump() {
+    printf("PRINT: -----------\n");
+    Display(&header);
+    printf("\n");
 }
 
 int Mem_Init(int size_of_region){
@@ -264,7 +271,7 @@ void *Mem_Alloc(int size, int style){
                 return to_remove;
                 break;
             }
-            printf("to remove: %p", to_remove);
+            //printf("to remove: %p", to_remove);
             //printf("memhead: %p", to_remove->mem_head);
             Delete_Node(to_remove, &header);
             
@@ -282,6 +289,7 @@ void *Mem_Alloc(int size, int style){
 				Insert_Node(&new_free, &header);
             }
             
+            Tree_Dump();
             return to_remove;
             break;
     
@@ -308,6 +316,7 @@ void *Mem_Alloc(int size, int style){
 				Insert_Node(&new_free, &header);
             }
             
+            Tree_Dump();
             return to_remove;
             break;
 
@@ -335,6 +344,7 @@ void *Mem_Alloc(int size, int style){
 				Insert_Node(&new_free, &header);
             }
             
+            Tree_Dump();
             return to_remove;
             break;
             
@@ -342,11 +352,6 @@ void *Mem_Alloc(int size, int style){
     return NULL;
 }
 
-void Tree_Dump() {
-    printf("PRINT: \n");
-    Display(&header);
-    printf("\n");
-}
 
 int Mem_Free(void *ptr){
     //non-coalescing
@@ -358,8 +363,9 @@ int Mem_Free(void *ptr){
     
     //coalescing
     if (ptr == NULL) return -1;
-    printf("Freeing memory\n");
+    printf("Freeing memory...\n");
     node *tmpPtr = (node*) ptr;
+    printf("Free size: %i | address: %p\n", tmpPtr->data, tmpPtr);
     
     //forward check
     void *check_address = ptr + tmpPtr->data;
@@ -371,6 +377,11 @@ int Mem_Free(void *ptr){
             check_forward = 0;
             break;
         } else {
+            if (forward_node->next != NULL) {
+                tmpPtr->next = forward_node->next;
+            } else {
+                tmpPtr->next = NULL;
+            }
             Delete_Node(forward_node, &header);
             check_address = check_address + forward_node->data;
             tmpPtr->data += forward_node->data;
@@ -388,12 +399,18 @@ int Mem_Free(void *ptr){
             break;
         } else {
             Delete_Node(back_node, &header);
+            if (tmpPtr->next != NULL) {
+                back_node->next = tmpPtr->next;
+            } else {
+                back_node->next = NULL;
+            }
+
             check_address = check_address - back_node->data;
             back_node->data += tmpPtr->data;
             tmpPtr = back_node;
         }
     }
-    printf("    TO INSERT: %p\n", tmpPtr);
+    printf("Coalesced insertion: %p with size: %i\n", tmpPtr, tmpPtr->data);
     printf("Pre Insert: \n");
     Tree_Dump();
     //insert in tree
