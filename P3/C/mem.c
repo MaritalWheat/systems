@@ -41,8 +41,9 @@ void Insert_Node(node **toInsert, node **n) {
                 curr->next = insert;
             } else {
                 *n = insert;
-                insert->next = curr;
+                (*n)->next = curr;
             }
+            return;
         }
 
         while (curr->next != NULL) {
@@ -53,7 +54,46 @@ void Insert_Node(node **toInsert, node **n) {
             }
             curr = curr->next;
         }
+        curr->next = insert;
     }
+}
+
+node* Search_For_Node(void *address, node **n) {
+    printf("delete node called\n");
+    if (*n == NULL) {
+        printf("Error: null header.");
+        return NULL;
+    }
+    node *curr = *n;
+    if (curr == address) {
+        return curr;
+    }
+    while (curr->next != NULL) {
+        if (curr->next == address) {
+            return curr->next;        }
+        curr = curr->next;
+    }
+    printf("Node not found\n");
+    return NULL;
+}
+
+node* Search_For_Previous_Node(void *address, node **n) {
+    printf("delete node called\n");
+    if (*n == NULL) {
+        printf("Error: null header.");
+        return NULL;
+    }
+    node *curr = *n;
+    if (curr == address) {
+        return NULL;
+    }
+    while (curr->next != NULL) {
+        if (curr->next == address) {
+            return curr;        }
+        curr = curr->next;
+    }
+    printf("Node not found\n");
+    return NULL;
 }
 
 node* Get_Best_Fit(int sizeToFit, node **n) {
@@ -156,6 +196,10 @@ void Delete_Node(void * address, node **n) {
 }
 
 void Display(node **n) {
+    if (*n == NULL) {
+        printf("Null header - print call\n");
+        return;
+    }
     node *curr = *n;
     printf("%p | size: %d\n", curr, curr->data);
     while(curr->next != NULL) {
@@ -298,12 +342,64 @@ void *Mem_Alloc(int size, int style){
     return NULL;
 }
 
+void Tree_Dump() {
+    printf("PRINT: \n");
+    Display(&header);
+    printf("\n");
+}
+
 int Mem_Free(void *ptr){
     //non-coalescing
-    if (ptr == NULL) return -1;
+    /*if (ptr == NULL) return -1;
     printf("FREEING MEMEORY\n");
     node* tmpPtr = (node*) ptr;
     Insert_Node(&tmpPtr, &header);
+    return 0;*/
+    
+    //coalescing
+    if (ptr == NULL) return -1;
+    printf("Freeing memory\n");
+    node *tmpPtr = (node*) ptr;
+    
+    //forward check
+    void *check_address = ptr + tmpPtr->data;
+    node *forward_node;
+    int check_forward = 1;
+    while(check_forward != 0) {
+        forward_node = Search_For_Node(check_address, &header);
+        if (forward_node == NULL) {
+            check_forward = 0;
+            break;
+        } else {
+            Delete_Node(forward_node, &header);
+            check_address = check_address + forward_node->data;
+            tmpPtr->data += forward_node->data;
+        }
+    }
+    
+    //back check
+    check_address = ptr;
+    node *back_node;
+    int check_back = 1;
+    while(check_back != 0) {
+        back_node = Search_For_Previous_Node(check_address, &header);
+        if (back_node == NULL) {
+            check_back = 0;
+            break;
+        } else {
+            Delete_Node(back_node, &header);
+            check_address = check_address - back_node->data;
+            back_node->data += tmpPtr->data;
+            tmpPtr = back_node;
+        }
+    }
+    printf("    TO INSERT: %p\n", tmpPtr);
+    printf("Pre Insert: \n");
+    Tree_Dump();
+    //insert in tree
+    Insert_Node(&tmpPtr, &header);
+    printf("Post Insert: \n");
+    Tree_Dump();
     return 0;
 }
 
@@ -311,45 +407,65 @@ void Mem_Dump(){
 
 }
 
-void Tree_Dump() {
-    printf("PRINT: \n");
-    Display(&header);
-    printf("\n");
-}
-
 #ifdef _debug 
 int main(){
     assert(Mem_Init(4096) == 0);
-    void *ptr[4];
-    void *first, *best, *worst;
+    void * ptr[6];
     
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    ptr[0] = Mem_Alloc(40, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    ptr[1] = Mem_Alloc(56, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    first = Mem_Alloc(256, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    best = Mem_Alloc(128, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    ptr[2] = Mem_Alloc(32, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    worst = Mem_Alloc(512, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    ptr[3] = Mem_Alloc(32, FIRSTFIT);
+    ptr[0] = Mem_Alloc(400, FIRSTFIT);
+    assert(ptr[0] != NULL);
     
-    while(Mem_Alloc(128, FIRSTFIT) != NULL);
-    assert(m_error == E_NO_SPACE);
+    ptr[1] = Mem_Alloc(400, FIRSTFIT);
+    assert(ptr[1] != NULL);
+    
+    ptr[2] = Mem_Alloc(1000, FIRSTFIT);
+    assert(ptr[2] != NULL);
+    
+    ptr[3] = Mem_Alloc(1000, FIRSTFIT);
+    assert(ptr[3] != NULL);
+    
+    ptr[4] = Mem_Alloc(400, FIRSTFIT);
+    assert(ptr[4] != NULL);
+    
+    ptr[5] = Mem_Alloc(400, FIRSTFIT);
+    assert(ptr[5] != NULL);
+    
+    assert(Mem_Free(ptr[0]) == 0);
+    ptr[0] = NULL;
     
     assert(Mem_Free(ptr[2]) == 0);
-    assert(Mem_Free(ptr[3]) == 0);
-    assert(Mem_Free(first) == 0);
-    assert(Mem_Free(best) == 0);
-    assert(Mem_Free(ptr[1]) == 0);
-    assert(Mem_Free(worst) == 0);
-    assert(Mem_Free(ptr[0]) == 0);
+    ptr[2] = NULL;
     
-    assert(Mem_Alloc(128, BESTFIT) == best);
+    assert(Mem_Free(ptr[4]) == 0);
+    ptr[4] = NULL;
+    
+    ptr[0] = Mem_Alloc(360, FIRSTFIT);
+    assert(ptr[0] != NULL);
+    
+    ptr[2] = Mem_Alloc(960, FIRSTFIT);
+    assert(ptr[2] != NULL);
+    
+    ptr[4] = Mem_Alloc(360, FIRSTFIT);
+    assert(ptr[4] != NULL);
+    
+    assert(Mem_Free(ptr[0]) == 0);
+    ptr[0] = NULL;
+    
+    assert(Mem_Free(ptr[2]) == 0);
+    ptr[2] = NULL;
+    
+    assert(Mem_Free(ptr[4]) == 0);
+    ptr[4] = NULL;
+    
+    ptr[0] = Mem_Alloc(360, FIRSTFIT);
+    assert(ptr[0] != NULL);
+    
+    ptr[2] = Mem_Alloc(360, FIRSTFIT);
+    assert(ptr[2] != NULL);
+    
+    ptr[4] = Mem_Alloc(960, FIRSTFIT);
+    assert(ptr[4] == NULL);
+    assert(m_error == E_NO_SPACE);
     
     exit(0);
 }
