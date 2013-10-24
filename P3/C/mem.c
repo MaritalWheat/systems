@@ -74,7 +74,7 @@ void Insert_Node(node **toInsert, node **n) {
 }
 
 node* Search_For_Node(void *address, node **n) {
-    printf("Search for node called.\n");
+    printf("Search for node called: searching for %p.\n", address);
     if (*n == NULL) {
         printf("     Error: null header.\n");
         return NULL;
@@ -92,8 +92,8 @@ node* Search_For_Node(void *address, node **n) {
     return NULL;
 }
 
-node* Search_For_Previous_Node(void *address, node **n) {
-    printf("Search for previous node called.\n");
+node* Search_For_Previous_Node(void *address, node **n, int size) {
+    printf("Search for previous node called: searching for %p, checking with size: %i\n", address, size);
     if (*n == NULL) {
         printf("     Error: null header.");
         return NULL;
@@ -102,10 +102,17 @@ node* Search_For_Previous_Node(void *address, node **n) {
     if (curr == address) {
         return NULL;
     }
+    
+    void *nextAddress = curr;
+    nextAddress += size;
+    
     while (curr->next != NULL) {
-        if (curr->next == address) {
+        printf("     Checking node with address %p - next pointer is: %p\n", curr, nextAddress);
+        if (nextAddress == address) {
             return curr;        }
         curr = curr->next;
+        nextAddress = curr;
+        nextAddress += size;
     }
     printf("     Node not found.\n");
     return NULL;
@@ -406,9 +413,10 @@ int Mem_Free(void *ptr){
     //back check
     check_address = ptr;
     node *back_node;
+    int size = tmpPtr->data;
     int check_back = 1;
     while(check_back != 0) {
-        back_node = Search_For_Previous_Node(check_address, &header);
+        back_node = Search_For_Previous_Node(check_address, &header, size);
         if (back_node == NULL) {
             check_back = 0;
             break;
@@ -422,6 +430,7 @@ int Mem_Free(void *ptr){
 
             check_address = check_address - back_node->data;
             back_node->data += tmpPtr->data;
+            size = back_node->data;
             tmpPtr = back_node;
         }
     }
@@ -442,45 +451,30 @@ void Mem_Dump(){
 #ifdef _debug 
 int main(){
     assert(Mem_Init(4096) == 0);
-    void *ptr[4];
-    void *first, *first2, *best, *worst;
+    void * ptr[4];
     
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    ptr[0] = Mem_Alloc(40, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    ptr[1] = Mem_Alloc(56, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    first = Mem_Alloc(256, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    best = Mem_Alloc(128, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    ptr[2] = Mem_Alloc(32, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    worst = Mem_Alloc(512, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    first2 = Mem_Alloc(256, FIRSTFIT);
-    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
-    ptr[3] = Mem_Alloc(32, FIRSTFIT);
+    ptr[0] = Mem_Alloc(800, FIRSTFIT);
+    assert(ptr[0] != NULL);
     
-    while(Mem_Alloc(128, FIRSTFIT) != NULL);
+    ptr[1] = Mem_Alloc(800, FIRSTFIT);
+    assert(ptr[1] != NULL);
+    
+    ptr[2] = Mem_Alloc(800, FIRSTFIT);
+    assert(ptr[2] != NULL);
+    
+    ptr[3] = Mem_Alloc(800, FIRSTFIT);
+    assert(ptr[3] != NULL);
+    
+    while (Mem_Alloc(800, FIRSTFIT) != NULL)
+        ;
+    
     assert(m_error == E_NO_SPACE);
     
-    assert(Mem_Free(ptr[2]) == 0);
-    assert(Mem_Free(ptr[3]) == 0);
-    assert(Mem_Free(first) == 0);
-    assert(Mem_Free(best) == 0);
     assert(Mem_Free(ptr[1]) == 0);
-    assert(Mem_Free(worst) == 0);
-    assert(Mem_Free(first2) == 0);
-    assert(Mem_Free(ptr[0]) == 0);
+    assert(Mem_Free(ptr[2]) == 0);
     
-    ptr[0] = Mem_Alloc(128, FIRSTFIT);
-    printf("Ptr[0]: %p\n", ptr[0]);
-    printf("first: %p\n", first);
-    printf("first + (256 - 128): %p\n", first + (256 - 128));
-    printf("first2: %p\n", first2);
-    assert((ptr[0] >= first && ptr[0] < first + (256 - 128)) ||
-           (ptr[0] >= first2 && ptr[0] < first2 + (256 - 128)));
+    ptr[2] = Mem_Alloc(1600, FIRSTFIT);
+    assert(ptr[2] != NULL);
     
     exit(0);
 }
