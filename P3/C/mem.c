@@ -45,16 +45,31 @@ void Insert_Node(node **toInsert, node **n) {
             }
             return;
         }
-
+        //handle insertion at head with multi-element list
+        if (insert < curr) {
+            *n = insert;
+            (*n)->next = curr;
+            return;
+        }
+        
         while (curr->next != NULL) {
             if (insert > curr && insert < curr->next) {
                 insert->next = curr->next;
                 curr->next = insert;
                 return;
             }
+            //handle ende of list
+            if (curr->next->next == NULL) {
+                if (insert > curr->next) {
+                    curr->next->next = insert;
+                } else {
+                    insert->next = curr->next;
+                    curr->next = insert;
+                }
+                return;
+            }
             curr = curr->next;
         }
-        curr->next = insert;
     }
 }
 
@@ -427,62 +442,45 @@ void Mem_Dump(){
 #ifdef _debug 
 int main(){
     assert(Mem_Init(4096) == 0);
-    void * ptr[6];
+    void *ptr[4];
+    void *first, *first2, *best, *worst;
     
-    ptr[0] = Mem_Alloc(400, FIRSTFIT);
-    assert(ptr[0] != NULL);
+    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
+    ptr[0] = Mem_Alloc(40, FIRSTFIT);
+    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
+    ptr[1] = Mem_Alloc(56, FIRSTFIT);
+    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
+    first = Mem_Alloc(256, FIRSTFIT);
+    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
+    best = Mem_Alloc(128, FIRSTFIT);
+    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
+    ptr[2] = Mem_Alloc(32, FIRSTFIT);
+    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
+    worst = Mem_Alloc(512, FIRSTFIT);
+    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
+    first2 = Mem_Alloc(256, FIRSTFIT);
+    assert(Mem_Alloc(8, FIRSTFIT) != NULL);
+    ptr[3] = Mem_Alloc(32, FIRSTFIT);
     
-    ptr[1] = Mem_Alloc(400, FIRSTFIT);
-    assert(ptr[1] != NULL);
-    
-    ptr[2] = Mem_Alloc(1000, FIRSTFIT);
-    assert(ptr[2] != NULL);
-    
-    ptr[3] = Mem_Alloc(1000, FIRSTFIT);
-    assert(ptr[3] != NULL);
-    
-    ptr[4] = Mem_Alloc(400, FIRSTFIT);
-    assert(ptr[4] != NULL);
-    
-    ptr[5] = Mem_Alloc(400, FIRSTFIT);
-    assert(ptr[5] != NULL);
-    
-    assert(Mem_Free(ptr[0]) == 0);
-    ptr[0] = NULL;
-    
-    assert(Mem_Free(ptr[2]) == 0);
-    ptr[2] = NULL;
-    
-    assert(Mem_Free(ptr[4]) == 0);
-    ptr[4] = NULL;
-    
-    ptr[0] = Mem_Alloc(360, FIRSTFIT);
-    assert(ptr[0] != NULL);
-    
-    ptr[2] = Mem_Alloc(960, FIRSTFIT);
-    assert(ptr[2] != NULL);
-    
-    ptr[4] = Mem_Alloc(360, FIRSTFIT);
-    assert(ptr[4] != NULL);
-    
-    assert(Mem_Free(ptr[0]) == 0);
-    ptr[0] = NULL;
-    
-    assert(Mem_Free(ptr[2]) == 0);
-    ptr[2] = NULL;
-    
-    assert(Mem_Free(ptr[4]) == 0);
-    ptr[4] = NULL;
-    
-    ptr[0] = Mem_Alloc(360, FIRSTFIT);
-    assert(ptr[0] != NULL);
-    
-    ptr[2] = Mem_Alloc(360, FIRSTFIT);
-    assert(ptr[2] != NULL);
-    
-    ptr[4] = Mem_Alloc(960, FIRSTFIT);
-    assert(ptr[4] == NULL);
+    while(Mem_Alloc(128, FIRSTFIT) != NULL);
     assert(m_error == E_NO_SPACE);
+    
+    assert(Mem_Free(ptr[2]) == 0);
+    assert(Mem_Free(ptr[3]) == 0);
+    assert(Mem_Free(first) == 0);
+    assert(Mem_Free(best) == 0);
+    assert(Mem_Free(ptr[1]) == 0);
+    assert(Mem_Free(worst) == 0);
+    assert(Mem_Free(first2) == 0);
+    assert(Mem_Free(ptr[0]) == 0);
+    
+    ptr[0] = Mem_Alloc(128, FIRSTFIT);
+    printf("Ptr[0]: %p\n", ptr[0]);
+    printf("first: %p\n", first);
+    printf("first + (256 - 128): %p\n", first + (256 - 128));
+    printf("first2: %p\n", first2);
+    assert((ptr[0] >= first && ptr[0] < first + (256 - 128)) ||
+           (ptr[0] >= first2 && ptr[0] < first2 + (256 - 128)));
     
     exit(0);
 }
