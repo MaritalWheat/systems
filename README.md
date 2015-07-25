@@ -7,9 +7,7 @@ P2: basic shell implemention in C
 ********
 P3: memory manager
 ********
-********
 P4: concurrent server implementation
-********
 ********
 P5: network filesystem
 ********
