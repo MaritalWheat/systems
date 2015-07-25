@@ -3,8 +3,13 @@ Systems
 ********
 P1: sorting of data from file by keys, in C
 ********
-P2: linux: basic shell implemention in C, including built-in exit, cd, pwd functionality, output redirection, background
-         processing, and process calling   
+P2: basic shell implemention in C 
 ********
 P3: memory manager
+********
+********
+P4: concurrent server implementation
+********
+********
+P5: network filesystem
 ********
